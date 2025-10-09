@@ -2,107 +2,173 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Document Converter</title>
+  <title>Word ↔ PDF Converter</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+
   <style>
-    body { font-family: "Noto Sans", sans-serif; background: linear-gradient(to right, #4f46e5, #3b82f6); color: white; }
+    body {
+      font-family: sans-serif;
+      background: linear-gradient(135deg, #4f46e5, #3b82f6);
+      color: white;
+      min-height: 100vh;
+      margin: 0;
+    }
     .content-section { display: none; }
     .active-section { display: block; }
-    #previewContainer, #previewPdfText {
-      background: white; color: black; padding: 20px; border-radius: 10px;
-      text-align: left; white-space: pre-wrap; overflow-wrap: break-word;
+    #previewContainer {
+      background: white;
+      color: black;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: left;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      max-height: 70vh;
+      overflow-y: auto;
     }
   </style>
 </head>
 
-<body class="min-h-screen flex flex-col items-center justify-start pt-10">
-  <!-- MENU -->
+<body class="flex flex-col items-center justify-start pt-10">
+
+  <!-- NAV MENU -->
   <nav class="bg-white text-gray-700 shadow-lg rounded-2xl mb-8 flex space-x-4 p-4 w-full max-w-3xl justify-center">
-    <button id="btnWordToPdf" class="menu-btn bg-indigo-600 text-white px-4 py-2 rounded-md">Word → PDF</button>
-    <button id="btnPdfToWord" class="menu-btn bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md">PDF → Word</button>
+    <button id="btnWordToPdf" class="bg-indigo-600 text-white px-4 py-2 rounded-md">Word → PDF</button>
+    <button id="btnPdfToWord" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md">PDF → Word</button>
   </nav>
 
   <!-- WORD → PDF -->
   <section id="sectionWordToPdf" class="content-section active-section bg-white text-gray-800 shadow-lg rounded-2xl p-8 w-full max-w-3xl text-center">
-    <h2 class="text-2xl font-bold mb-4 text-gray-900">Word → PDF Converter</h2>
+    <h2 class="text-2xl font-bold mb-4">Word → PDF Converter</h2>
     <input id="fileWord" type="file" accept=".docx" class="block w-full mb-4 border border-gray-300 rounded-md p-2" />
-    <button id="convertWordBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md w-full">Preview Word</button>
+    <button id="convertWordBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md w-full transition">Extract & Preview</button>
     <p id="statusWord" class="mt-4 text-sm text-gray-600"></p>
-    <div id="previewContainer" class="mt-6 hidden max-h-[70vh] overflow-auto"></div>
-    <button id="downloadPdfBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md w-full mt-4 hidden">⬇️ Download PDF (CloudConvert)</button>
+    <div id="previewContainer" class="mt-6 hidden"></div>
+    <button id="downloadPdfBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md w-full mt-4 hidden">Download PDF (via CloudConvert)</button>
   </section>
 
   <!-- PDF → WORD -->
   <section id="sectionPdfToWord" class="content-section bg-white text-gray-800 shadow-lg rounded-2xl p-8 w-full max-w-3xl text-center">
-    <h2 class="text-2xl font-bold mb-4 text-gray-900">PDF → Word Converter</h2>
+    <h2 class="text-2xl font-bold mb-4">PDF → Word Converter</h2>
     <input id="filePdf" type="file" accept="application/pdf" class="block w-full mb-4 border border-gray-300 rounded-md p-2" />
+    <button id="convertPdfBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md w-full transition">Convert via CloudConvert</button>
     <p id="statusPdf" class="mt-4 text-sm text-gray-600"></p>
-    <button id="convertPdfBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md w-full">Convert via CloudConvert</button>
   </section>
 
   <script>
-    // Menu toggle
+    // === MENU TOGGLE ===
     const btnWordToPdf = document.getElementById("btnWordToPdf");
     const btnPdfToWord = document.getElementById("btnPdfToWord");
     const sectionWordToPdf = document.getElementById("sectionWordToPdf");
     const sectionPdfToWord = document.getElementById("sectionPdfToWord");
-    btnWordToPdf.onclick = () => { sectionWordToPdf.classList.add("active-section"); sectionPdfToWord.classList.remove("active-section"); };
-    btnPdfToWord.onclick = () => { sectionPdfToWord.classList.add("active-section"); sectionWordToPdf.classList.remove("active-section"); };
+
+    btnWordToPdf.addEventListener("click", () => {
+      sectionWordToPdf.classList.add("active-section");
+      sectionPdfToWord.classList.remove("active-section");
+      btnWordToPdf.classList.add("bg-indigo-600", "text-white");
+      btnPdfToWord.classList.remove("bg-indigo-600", "text-white");
+      btnPdfToWord.classList.add("bg-gray-200", "text-gray-800");
+    });
+
+    btnPdfToWord.addEventListener("click", () => {
+      sectionPdfToWord.classList.add("active-section");
+      sectionWordToPdf.classList.remove("active-section");
+      btnPdfToWord.classList.add("bg-indigo-600", "text-white");
+      btnWordToPdf.classList.remove("bg-indigo-600", "text-white");
+      btnWordToPdf.classList.add("bg-gray-200", "text-gray-800");
+    });
 
     // === WORD → PDF ===
     const fileWord = document.getElementById("fileWord");
     const convertWordBtn = document.getElementById("convertWordBtn");
-    const downloadPdfBtn = document.getElementById("downloadPdfBtn");
     const statusWord = document.getElementById("statusWord");
     const previewContainer = document.getElementById("previewContainer");
+    const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 
     let currentWordFile = null;
-    convertWordBtn.onclick = async () => {
-      const file = fileWord.files[0];
-      if (!file) return (statusWord.textContent = "⚠️ Select a .docx file first!");
-      currentWordFile = file;
-      const arrayBuffer = await file.arrayBuffer();
-      const mammothResult = await window.mammoth.convertToHtml({ arrayBuffer });
-      previewContainer.innerHTML = mammothResult.value;
-      previewContainer.classList.remove("hidden");
-      downloadPdfBtn.classList.remove("hidden");
-      statusWord.textContent = "✅ Preview ready!";
-    };
-    downloadPdfBtn.onclick = async () => {
-      if (!currentWordFile) return;
-      statusWord.textContent = "⏳ Sending to CloudConvert...";
-      const formData = new FormData();
-      formData.append("docx", currentWordFile);
-      const resp = await fetch("/api/convert-docx-to-pdf", { method: "POST", body: formData });
-      const blob = await resp.blob();
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = currentWordFile.name.replace(/\.docx?$/i, ".pdf");
-      a.click();
-      statusWord.textContent = "✅ PDF downloaded!";
-    };
 
-    // === PDF → WORD ===
+    convertWordBtn.addEventListener("click", async () => {
+      const file = fileWord.files[0];
+      if (!file) {
+        statusWord.textContent = "⚠️ Please select a .docx file!";
+        return;
+      }
+
+      currentWordFile = file;
+      statusWord.textContent = "⏳ Reading Word file...";
+      previewContainer.classList.add("hidden");
+      downloadPdfBtn.classList.add("hidden");
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const { value: htmlContent } = await window.mammoth.convertToHtml({ arrayBuffer });
+        previewContainer.innerHTML = htmlContent;
+        previewContainer.classList.remove("hidden");
+        downloadPdfBtn.classList.remove("hidden");
+        statusWord.textContent = "✅ Preview ready. Click below to convert.";
+      } catch (err) {
+        console.error(err);
+        statusWord.textContent = "❌ Failed to read Word file.";
+      }
+    });
+
+    downloadPdfBtn.addEventListener("click", async () => {
+      if (!currentWordFile) return;
+      statusWord.textContent = "⏳ Converting via CloudConvert...";
+      try {
+        const formData = new FormData();
+        formData.append("docx", currentWordFile, currentWordFile.name);
+        const response = await fetch("/api/convert-docx-to-pdf", { method: "POST", body: formData });
+        if (!response.ok) throw new Error(await response.text());
+        const blob = await response.blob();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = currentWordFile.name.replace(/\.docx?$/i, ".pdf");
+        a.click();
+        statusWord.textContent = "✅ PDF downloaded successfully!";
+      } catch (err) {
+        console.error(err);
+        statusWord.textContent = "❌ Conversion failed.";
+      }
+    });
+
+    // === PDF → WORD (DIRECT CLOUDCONVERT) ===
     const filePdf = document.getElementById("filePdf");
     const convertPdfBtn = document.getElementById("convertPdfBtn");
     const statusPdf = document.getElementById("statusPdf");
 
-    convertPdfBtn.onclick = async () => {
+    convertPdfBtn.addEventListener("click", async () => {
       const file = filePdf.files[0];
-      if (!file) return (statusPdf.textContent = "⚠️ Select a PDF file first!");
-      statusPdf.textContent = "⏳ Uploading to CloudConvert...";
-      const formData = new FormData();
-      formData.append("pdf", file);
-      const resp = await fetch("/api/convert-pdf-to-docx", { method: "POST", body: formData });
-      if (!resp.ok) return (statusPdf.textContent = "❌ Conversion failed.");
-      const blob = await resp.blob();
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = file.name.replace(/\.pdf$/i, ".docx");
-      a.click();
-      statusPdf.textContent = "✅ Word file downloaded!";
-    };
+      if (!file) {
+        statusPdf.textContent = "⚠️ Please select a PDF file!";
+        return;
+      }
+
+      statusPdf.textContent = "⏳ Uploading and converting via CloudConvert...";
+
+      try {
+        const formData = new FormData();
+        formData.append("pdf", file, file.name);
+
+        const response = await fetch("/api/convert-pdf-to-docx", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) throw new Error(await response.text());
+        const blob = await response.blob();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = file.name.replace(/\.pdf$/i, ".docx");
+        a.click();
+
+        statusPdf.textContent = "✅ Word file downloaded successfully!";
+      } catch (err) {
+        console.error(err);
+        statusPdf.textContent = "❌ Conversion failed.";
+      }
+    });
   </script>
 </body>
 </html>
