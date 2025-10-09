@@ -1,26 +1,15 @@
 @echo off
 title Word ↔ PDF Converter
-echo ---------------------------------------------------
-echo   Word ↔ PDF Converter (Node.js + CloudConvert)
-echo ---------------------------------------------------
+echo Starting Word ↔ PDF Converter...
+cd /d "%~dp0"
 
-:: Check if Node.js is installed
-where node >nul 2>nul
-if %errorlevel% neq 0 (
-    echo ❌ Node.js is not installed.
-    echo Please install it from https://nodejs.org/en/download/
-    pause
-    exit /b
+:: Ensure dependencies are installed
+if not exist "node_modules" (
+  echo Installing required packages...
+  call npm install >nul 2>&1
 )
 
-:: Install dependencies (only first run)
-if not exist node_modules (
-    echo 📦 Installing required dependencies...
-    npm install
-)
-
-:: Start the server
-echo 🚀 Starting the converter...
-npm start
-
+:: Start the app with Electron
+echo Launching application window...
+npx electron .
 pause
