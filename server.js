@@ -1,39 +1,23 @@
-// server.js
 const express = require('express');
 const multer = require('multer');
 const fetch = require('node-fetch'); // node-fetch@2
 const FormData = require('form-data');
-const path = require("path");
-const open = require('open').default || require('open');
-const { exec } = require('child_process');
-
-// Simple cross-platform browser launcher
-function openBrowser(url) {
-  if (process.platform === "win32") {
-    exec(`start "" "${url}"`);
-  } else if (process.platform === "darwin") {
-    exec(`open "${url}"`);
-  } else {
-    exec(`xdg-open "${url}"`);
-  }
-}
-
+const path = require('path');
 
 const app = express();
 const upload = multer();
 
-// Serve static files (the frontend)
-app.use(express.static(path.join(__dirname, "public")));
+// Serve static frontend
+app.use(express.static(path.join(__dirname, 'public')));
 
 // 🔑 Replace with your real CloudConvert API key
-const CLOUDCONVERT_API_KEY = ""; // ADD YOUR OWN API FROM CLOUDCONVERT
+const CLOUDCONVERT_API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiOTg5YjBjZTMzNWI3M2VkZGUwOGJkNjFlODY5OGIxN2NiOWY2YjExNzRhNjc4YTAyNDUxNTMxMWE0ZGIyNWNiNTNhZDU1Njg0NzE5NzMzYzAiLCJpYXQiOjE3NjAwMDYyNzUuNjU4NDI1LCJuYmYiOjE3NjAwMDYyNzUuNjU4NDI3LCJleHAiOjQ5MTU2Nzk4NzUuNjUxNDU3LCJzdWIiOiI3MzEzODQ3MCIsInNjb3BlcyI6WyJ0YXNrLnJlYWQiLCJ0YXNrLndyaXRlIl19.hKZXfHbMxQoD3et043jBRnIVMhDjzKSnREvQUANmI-QIRLA09rjCpQN6h_IRVREBqAdDXTPsBeqLxBlg6guCoGYRGYeY7eaTjRoqA-WyY4lFSsAGb_gCh0I_U--5QRT7ivVu1a5Yt8PNfqLAWxbPsEqduW4P6BFiBe7FIlyf3X-YTtUNhJSQrFb1cRu7jr_NkBd5_pwkmXvczpQlBK_SsTQqFHMy7HfTG2JEE55eBWiWDIPZq7J3Vxsw8UY729iDwi64MIpZ0dJMBXp8uCm0PNRGt3FvB7zkvYmTpQtT76wI6EanlD3uEvIydQHoN52AsL4v7gq2COakUs25RmZkBMHNtuQcu7smJSEG00kgR-ALl3d1wdYHpj1PhYdFYlrqeObCaI7uZaBM18Uu0QAMhlJ1cth8dGm1gDXH0-gFNh-ol3bxSSSBq5nPSgMckOBtYCI1PJNSDRn2-pHum1w0uqTvbUCR4QlIcswGCdZXzyYoU9ax3M31PAAMVDD-ITNDvzDMNMkv9EkJWYeJYeKtTFcyvBNwIP7X-h9P9gzwob2I9pZyP3fH8QovdGNtAgN-TKIzIqEJUTQAo2vuhpTBdpaoO_By9-BK9Wz_IF0qCCAMpNJTlxrVsBy-zfSvc_dFv-7KOEtUodkTf_dwJFwHX8t1wqwYknr2nu3ngF4QkCc";
 
 // === WORD → PDF ===
 app.post('/api/convert-docx-to-pdf', upload.single('docx'), async (req, res) => {
   try {
     if (!req.file) throw new Error("No file uploaded.");
 
-    // Step 1: Create CloudConvert job
     const jobResp = await fetch("https://api.cloudconvert.com/v2/jobs", {
       method: "POST",
       headers: {
@@ -49,10 +33,7 @@ app.post('/api/convert-docx-to-pdf', upload.single('docx'), async (req, res) => 
             input_format: "docx",
             output_format: "pdf"
           },
-          "export-my-file": {
-            operation: "export/url",
-            input: "convert-my-file"
-          }
+          "export-my-file": { operation: "export/url", input: "convert-my-file" }
         }
       })
     });
@@ -60,15 +41,12 @@ app.post('/api/convert-docx-to-pdf', upload.single('docx'), async (req, res) => 
     const jobData = await jobResp.json();
     if (!jobData.data) throw new Error("Invalid CloudConvert job creation: " + JSON.stringify(jobData));
 
-    // Step 2: Upload file
     const importTask = jobData.data.tasks.find(t => t.name === "import-my-file");
     const uploadUrl = importTask.result.form.url;
     const uploadParams = importTask.result.form.parameters;
 
     const formData = new FormData();
-    for (const [key, value] of Object.entries(uploadParams)) {
-      formData.append(key, value);
-    }
+    for (const [k, v] of Object.entries(uploadParams)) formData.append(k, v);
     formData.append("file", req.file.buffer, req.file.originalname);
 
     const uploadResp = await fetch(uploadUrl, { method: "POST", body: formData });
@@ -76,9 +54,9 @@ app.post('/api/convert-docx-to-pdf', upload.single('docx'), async (req, res) => 
 
     console.log("✅ Word file uploaded. Waiting for conversion...");
 
-    // Step 3: Poll job
     const jobId = jobData.data.id;
     let finishedJob = null;
+
     for (let i = 0; i < 60; i++) {
       const statusResp = await fetch(`https://api.cloudconvert.com/v2/jobs/${jobId}`, {
         headers: { Authorization: `Bearer ${CLOUDCONVERT_API_KEY}` }
@@ -94,7 +72,6 @@ app.post('/api/convert-docx-to-pdf', upload.single('docx'), async (req, res) => 
 
     if (!finishedJob) throw new Error("Job timeout or not finished.");
 
-    // Step 4: Download result
     const exportTask = finishedJob.data.tasks.find(
       t => t.operation === "export/url" && t.status === "finished"
     );
@@ -107,7 +84,6 @@ app.post('/api/convert-docx-to-pdf', upload.single('docx'), async (req, res) => 
     const baseName = req.file.originalname.replace(/\.docx?$/i, "");
     res.setHeader("Content-Disposition", `attachment; filename="${baseName}.pdf"`);
     res.send(pdfBuffer);
-
   } catch (err) {
     console.error("❌ Conversion error:", err);
     res.status(500).json({ error: err.message });
@@ -119,7 +95,6 @@ app.post('/api/convert-pdf-to-docx', upload.single('pdf'), async (req, res) => {
   try {
     if (!req.file) throw new Error("No file uploaded.");
 
-    // Step 1: Create CloudConvert job
     const jobResp = await fetch("https://api.cloudconvert.com/v2/jobs", {
       method: "POST",
       headers: {
@@ -135,10 +110,7 @@ app.post('/api/convert-pdf-to-docx', upload.single('pdf'), async (req, res) => {
             input_format: "pdf",
             output_format: "docx"
           },
-          "export-my-file": {
-            operation: "export/url",
-            input: "convert-my-file"
-          }
+          "export-my-file": { operation: "export/url", input: "convert-my-file" }
         }
       })
     });
@@ -146,15 +118,12 @@ app.post('/api/convert-pdf-to-docx', upload.single('pdf'), async (req, res) => {
     const jobData = await jobResp.json();
     if (!jobData.data) throw new Error("Invalid CloudConvert job creation: " + JSON.stringify(jobData));
 
-    // Step 2: Upload file
     const importTask = jobData.data.tasks.find(t => t.name === "import-my-file");
     const uploadUrl = importTask.result.form.url;
     const uploadParams = importTask.result.form.parameters;
 
     const formData = new FormData();
-    for (const [key, value] of Object.entries(uploadParams)) {
-      formData.append(key, value);
-    }
+    for (const [k, v] of Object.entries(uploadParams)) formData.append(k, v);
     formData.append("file", req.file.buffer, req.file.originalname);
 
     const uploadResp = await fetch(uploadUrl, { method: "POST", body: formData });
@@ -162,9 +131,9 @@ app.post('/api/convert-pdf-to-docx', upload.single('pdf'), async (req, res) => {
 
     console.log("✅ PDF uploaded. Waiting for conversion...");
 
-    // Step 3: Poll job
     const jobId = jobData.data.id;
     let finishedJob = null;
+
     for (let i = 0; i < 60; i++) {
       const statusResp = await fetch(`https://api.cloudconvert.com/v2/jobs/${jobId}`, {
         headers: { Authorization: `Bearer ${CLOUDCONVERT_API_KEY}` }
@@ -180,7 +149,6 @@ app.post('/api/convert-pdf-to-docx', upload.single('pdf'), async (req, res) => {
 
     if (!finishedJob) throw new Error("Job timeout or not finished.");
 
-    // Step 4: Download result
     const exportTask = finishedJob.data.tasks.find(
       t => t.operation === "export/url" && t.status === "finished"
     );
@@ -193,25 +161,13 @@ app.post('/api/convert-pdf-to-docx', upload.single('pdf'), async (req, res) => {
     const baseName = req.file.originalname.replace(/\.pdf$/i, "");
     res.setHeader("Content-Disposition", `attachment; filename="${baseName}.docx"`);
     res.send(docxBuffer);
-
   } catch (err) {
     console.error("❌ Conversion error (PDF→Word):", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// === Start server ===
 const port = process.env.PORT || 3000;
-app.listen(port, async () => {
+app.listen(port, () => {
   console.log(`✅ Server running at http://localhost:${port}`);
-  
-  // Automatically open browser
-  openBrowser(`http://localhost:${port}`);
-  
-  // Keep process alive when packaged
-  if (process.pkg) {
-    console.log("🚀 Running inside packaged EXE — keeping alive...");
-    setInterval(() => {}, 1000);
-  }
 });
-
