@@ -26,7 +26,7 @@ const upload = multer();
 app.use(express.static(path.join(__dirname, "public")));
 
 // 🔑 Replace with your real CloudConvert API key
-const CLOUDCONVERT_API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiOTg5YjBjZTMzNWI3M2VkZGUwOGJkNjFlODY5OGIxN2NiOWY2YjExNzRhNjc4YTAyNDUxNTMxMWE0ZGIyNWNiNTNhZDU1Njg0NzE5NzMzYzAiLCJpYXQiOjE3NjAwMDYyNzUuNjU4NDI1LCJuYmYiOjE3NjAwMDYyNzUuNjU4NDI3LCJleHAiOjQ5MTU2Nzk4NzUuNjUxNDU3LCJzdWIiOiI3MzEzODQ3MCIsInNjb3BlcyI6WyJ0YXNrLnJlYWQiLCJ0YXNrLndyaXRlIl19.hKZXfHbMxQoD3et043jBRnIVMhDjzKSnREvQUANmI-QIRLA09rjCpQN6h_IRVREBqAdDXTPsBeqLxBlg6guCoGYRGYeY7eaTjRoqA-WyY4lFSsAGb_gCh0I_U--5QRT7ivVu1a5Yt8PNfqLAWxbPsEqduW4P6BFiBe7FIlyf3X-YTtUNhJSQrFb1cRu7jr_NkBd5_pwkmXvczpQlBK_SsTQqFHMy7HfTG2JEE55eBWiWDIPZq7J3Vxsw8UY729iDwi64MIpZ0dJMBXp8uCm0PNRGt3FvB7zkvYmTpQtT76wI6EanlD3uEvIydQHoN52AsL4v7gq2COakUs25RmZkBMHNtuQcu7smJSEG00kgR-ALl3d1wdYHpj1PhYdFYlrqeObCaI7uZaBM18Uu0QAMhlJ1cth8dGm1gDXH0-gFNh-ol3bxSSSBq5nPSgMckOBtYCI1PJNSDRn2-pHum1w0uqTvbUCR4QlIcswGCdZXzyYoU9ax3M31PAAMVDD-ITNDvzDMNMkv9EkJWYeJYeKtTFcyvBNwIP7X-h9P9gzwob2I9pZyP3fH8QovdGNtAgN-TKIzIqEJUTQAo2vuhpTBdpaoO_By9-BK9Wz_IF0qCCAMpNJTlxrVsBy-zfSvc_dFv-7KOEtUodkTf_dwJFwHX8t1wqwYknr2nu3ngF4QkCc"; // keep this safe!
+const CLOUDCONVERT_API_KEY = ""; // ADD YOUR OWN API FROM CLOUDCONVERT
 
 // === WORD → PDF ===
 app.post('/api/convert-docx-to-pdf', upload.single('docx'), async (req, res) => {
@@ -214,3 +214,4 @@ app.listen(port, async () => {
     setInterval(() => {}, 1000);
   }
 });
+
