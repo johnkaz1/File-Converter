@@ -1,43 +1,42 @@
-// main.js
-const { app, BrowserWindow } = require("electron");
-const path = require("path");
-const { spawn } = require("child_process");
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
+const { spawn } = require('child_process');
 
-let mainWindow;
 let serverProcess;
 
 function createWindow() {
-  mainWindow = new BrowserWindow({
+  const win = new BrowserWindow({
     width: 1200,
     height: 800,
-    webPreferences: { nodeIntegration: false },
-    title: "Word → PDF Converter",
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
   });
 
-  // Load the local Express server URL
-  mainWindow.loadURL("http://localhost:3000");
-
-  mainWindow.on("closed", () => {
-    mainWindow = null;
-    if (serverProcess) serverProcess.kill();
-  });
+  win.loadURL('http://localhost:3000');
+  win.setMenuBarVisibility(false);
 }
 
 app.whenReady().then(() => {
-  // Start the Express server
-  serverProcess = spawn("node", [path.join(__dirname, "server.js")], {
-    stdio: "inherit",
-    shell: true,
+  const serverPath = path.join(__dirname, 'server.js');
+  console.log('🚀 Starting Express backend...');
+
+  // Start Express backend as background process
+  serverProcess = spawn(process.execPath, [serverPath], {
+    stdio: 'inherit',
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: 'true' },
   });
 
-  // Wait 2 seconds to allow the server to start before opening the window
+  // Wait a bit for the server to start, then open the window
   setTimeout(createWindow, 2000);
 
-  app.on("activate", () => {
+  app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+app.on('window-all-closed', () => {
+  if (serverProcess) serverProcess.kill();
+  if (process.platform !== 'darwin') app.quit();
 });
