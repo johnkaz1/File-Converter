@@ -1,0 +1,39 @@
+{
+  "name": "word-pdf-converter",
+  "version": "1.0.0",
+  "description": "Word ↔ PDF Converter (Express + CloudConvert)",
+  "main": "server.js",
+  "bin": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build-exe": "pkg . --targets node18-win-x64 --output converter.exe",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "converter",
+    "word",
+    "pdf",
+    "cloudconvert",
+    "express"
+  ],
+  "author": "Elias Argitis",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "form-data": "^4.0.4",
+    "multer": "^2.0.2",
+    "node-fetch": "^2.7.0"
+  },
+  "pkg": {
+    "scripts": [
+      "server.js"
+    ],
+    "assets": [
+      "public/**/*"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ]
+  }
+}
