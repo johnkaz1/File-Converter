@@ -1,16 +1,16 @@
 {
   "name": "word-pdf-converter",
   "version": "1.0.0",
-  "description": "Word ↔ PDF Converter (Express + CloudConvert)",
-  "main": "server.js",
-  "bin": "server.js",
+  "description": "Word ↔ PDF Converter (Electron + Express + CloudConvert)",
+  "main": "main.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "electron .",
     "dev": "node server.js",
     "build-exe": "pkg . --targets node18-win-x64 --output converter.exe",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
+    "electron",
     "converter",
     "word",
     "pdf",
@@ -25,15 +25,12 @@
     "multer": "^2.0.2",
     "node-fetch": "^2.7.0"
   },
+  "devDependencies": {
+    "electron": "^38.2.2"
+  },
   "pkg": {
-    "scripts": [
-      "server.js"
-    ],
-    "assets": [
-      "public/**/*"
-    ],
-    "targets": [
-      "node18-win-x64"
-    ]
+    "scripts": ["server.js"],
+    "assets": ["public/**/*"],
+    "targets": ["node18-win-x64"]
   }
 }
